@@ -29,9 +29,9 @@
         <env name="SESSION_DRIVER" value="array"/>
         
         <!-- GoWhatsApp Config -->
-        <env name="GO_WHATSAPP_BASE_URL" value="http://localhost:3000"/>
+        <env name="GO_WHATSAPP_BASE_URL" value="http://automation-server-gowhatsappwebmultidevi-e42966-138-68-83-202.traefik.me/"/>
         <env name="GO_WHATSAPP_USERNAME" value="admin"/>
-        <env name="GO_WHATSAPP_PASSWORD" value="secret"/>
+        <env name="GO_WHATSAPP_PASSWORD" value="yrwdxlxfneuna8zg1dlt3jhdjvuf790h"/>
         <env name="GO_WHATSAPP_LOGGING_ENABLED" value="true"/>
     </php>
 </phpunit>

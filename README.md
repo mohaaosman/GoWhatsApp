@@ -2,6 +2,42 @@
 
 A Laravel wrapper for [go-whatsapp-web-multidevice](https://github.com/aldinokemal/go-whatsapp-web-multidevice) using [Saloon](https://docs.saloon.dev/).
 
+## Prerequisites
+
+Before using this package, you must have the **go-whatsapp-web-multidevice** server running. This package interacts with its API.
+
+### Setting up the Server
+
+You can run the server locally using Docker or deploy it to a remote server.
+
+**Run with Docker:**
+
+```bash
+docker run -d \
+  --name go-whatsapp \
+  -p 3000:3000 \
+  -v $(pwd)/whatsapp_files:/usr/src/app/files \
+  -e SECRET_KEY=your-secret-key \
+  aldinokemal/go-whatsapp-web-multidevice
+```
+
+Or using **Docker Compose**:
+
+```yaml
+version: '3.9'
+services:
+  go-whatsapp:
+    image: aldinokemal/go-whatsapp-web-multidevice
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./whatsapp_files:/usr/src/app/files
+    environment:
+      - SECRET_KEY=your-secret-key
+```
+
+Once running, the API will be available at `http://localhost:3000` (or your server IP).
+
 ## Installation
 
 You can install the package via composer:
@@ -36,31 +72,16 @@ GO_WHATSAPP_LOGGING_ENABLED=true
 
 ## Usage
 
-### Managing Devices
+### Getting the Device Instance
 
-The package uses the `GoWhatsAppDevice` model to manage connections. You can create a device record in your database:
+The package simplifies device management by providing a helper to get the single active device instance. It automatically checks for an existing device in the database, fetches from the API, or creates one based on your config.
 
 ```php
 use Zifala\GoWhatsApp\Models\GoWhatsAppDevice;
 
-$device = GoWhatsAppDevice::create([
-    'name' => 'My Main Device',
-    'base_url' => 'http://localhost:3000', // Optional if using env default
-    'username' => 'myuser',                // Optional if using env default
-    'password' => 'mypassword',            // Optional if using env default
-    'phone' => '628123456789',             // Optional, for reference
-]);
+// Retrieve the singleton device instance
+$device = GoWhatsAppDevice::getDevice();
 ```
-
-#### Sync Devices
-You can synchronize your database with the GoWhatsApp server to automatically import active sessions and remove stale ones. This allows you to fetch all devices currently active on the server.
-
-```php
-// Syncs active devices from server to DB and removes stale local records
-GoWhatsAppDevice::sync();
-```
-
-*Note: Stale devices (those in the DB but not on the server) are deleted via a background job `DeleteStaleDevices`.*
 
 ### App Management
 
@@ -121,8 +142,11 @@ Manage user account information.
 // Get User Info
 $info = $device->userInfo('628123456789');
 
-// Check if User exists on WhatsApp
-$exists = $device->checkUser('628123456789');
+// Check if User exists on WhatsApp (Raw Response)
+$response = $device->checkUser('628123456789');
+
+// Check if Number Exists (Boolean Helper)
+$exists = $device->numberExists('628123456789'); // Returns true/false
 
 // Get Avatar
 $avatar = $device->avatar('628123456789');

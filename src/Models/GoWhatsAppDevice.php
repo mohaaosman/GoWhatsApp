@@ -8,7 +8,6 @@ use Zifala\GoWhatsApp\Traits\HasSend;
 use Zifala\GoWhatsApp\Traits\HasAccount;
 use Zifala\GoWhatsApp\Traits\HasChatManagement;
 use Zifala\GoWhatsApp\GoWhatsAppConnector;
-use Zifala\GoWhatsApp\Jobs\DeleteStaleDevices;
 
 class GoWhatsAppDevice extends Model
 {
@@ -27,71 +26,49 @@ class GoWhatsAppDevice extends Model
     }
 
     /**
-     * Sync devices with the server.
-     * Fetches all sessions from the server, updates/creates them in the DB,
-     * and deletes local devices that are no longer on the server.
+     * Get the single active device instance.
+     * Uses the first device found in the database, or creates one from config/API.
      */
-    public static function sync(): void
+    public static function getDevice(): self
     {
-        // Use default config to connect to the server (assuming it manages the sessions)
+        // 1. Try to find the first device in DB
+        $device = self::first();
+
+        if ($device) {
+            return $device;
+        }
+
+        // 2. If not in DB, try to fetch from API and create
         $connector = new GoWhatsAppConnector();
-        
         try {
-            // Fetch devices from server
-            // Using the 'appDevices' request via the connector's 'app' resource
             $response = $connector->app()->appDevices();
-        } catch (\Exception $e) {
-            // Log error or rethrow depending on preference. For now, just return.
-            return;
-        }
-
-        if ($response->failed()) {
-            return;
-        }
-
-        // Assuming response is a list of session names (strings) or objects with 'name'
-        $serverSessions = $response->json();
-        
-        // If wrapped in 'data' or 'results' key, adjust here. 
-        // Based on typical behavior, let's look for a key if the root is an assoc array
-        if (is_array($serverSessions) && !array_is_list($serverSessions) && isset($serverSessions['results'])) {
-             $serverSessions = $serverSessions['results'];
-        } elseif (is_array($serverSessions) && !array_is_list($serverSessions) && isset($serverSessions['data'])) {
-             $serverSessions = $serverSessions['data'];
-        }
-
-        if (!is_array($serverSessions)) {
-            return;
-        }
-
-        $activeIds = [];
-
-        foreach ($serverSessions as $sessionData) {
-            // Handle both string array ["session1"] and object array [{"name": "session1"}]
-            $name = is_string($sessionData) ? $sessionData : ($sessionData['name'] ?? null);
-
-            if ($name) {
-                // Update or create the device record
-                // We use the config credentials as defaults since the server manages them
-                $device = self::updateOrCreate(
-                    ['name' => $name], 
-                    [
+            if ($response->successful()) {
+                $data = $response->json();
+                // Handle response structure: ["session1"] or [{"name": "session1"}]
+                $sessions = isset($data['results']) ? $data['results'] : (isset($data['data']) ? $data['data'] : $data);
+                
+                if (is_array($sessions) && count($sessions) > 0) {
+                    $firstSession = $sessions[0];
+                    $name = is_string($firstSession) ? $firstSession : ($firstSession['name'] ?? 'default');
+                    
+                    return self::create([
+                        'name' => $name,
                         'base_url' => config('go-whatsapp.base_url'),
                         'username' => config('go-whatsapp.username'),
                         'password' => config('go-whatsapp.password'),
-                        // 'phone' => ... we might not know the phone number from just the listing
-                    ]
-                );
-                $activeIds[] = $device->id;
+                    ]);
+                }
             }
+        } catch (\Exception $e) {
+            // API unreachable or empty
         }
 
-        // Identify stale devices (in DB but not in server list)
-        $staleDeviceIds = self::whereNotIn('id', $activeIds)->pluck('id')->toArray();
-
-        // Dispatch background job to delete them
-        if (!empty($staleDeviceIds)) {
-            DeleteStaleDevices::dispatch($staleDeviceIds);
-        }
+        // 3. Fallback: Create from Config
+        return self::create([
+            'name' => 'Default Device',
+            'base_url' => config('go-whatsapp.base_url'),
+            'username' => config('go-whatsapp.username'),
+            'password' => config('go-whatsapp.password'),
+        ]);
     }
 }
