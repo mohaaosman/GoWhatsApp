@@ -19,7 +19,7 @@ trait HasAccount
     public function changeAvatar(string $avatarPath)
     {
         $request = new UserChangeAvatar();
-        $request->body()->addFile('avatar', $avatarPath);
+        $request->body()->add('avatar', new MultipartValue('avatar', $avatarPath, basename($avatarPath)));
         return $this->connector()->send($request);
     }
 

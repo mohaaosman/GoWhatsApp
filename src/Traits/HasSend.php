@@ -39,7 +39,15 @@ trait HasSend
         if ($imageUrl) {
             $request->body()->add('image_url', $imageUrl);
         } else {
-             $request->body()->addFile('image', $imagePath);
+             if (!file_exists($imagePath)) {
+                 throw new \InvalidArgumentException("File not found: " . $imagePath);
+             }
+             $content = file_get_contents($imagePath);
+             if ($content === false) {
+                 throw new \RuntimeException("Failed to read file content: " . $imagePath);
+             }
+             // Ensure content is cast to string to be safe
+             $request->body()->add('image', new MultipartValue('image', (string)$content, basename($imagePath)));
         }
         
         if ($caption) $request->body()->add('caption', $caption);
@@ -53,7 +61,16 @@ trait HasSend
     {
          $request = new SendFile();
          $request->body()->add('phone', $phone);
-         $request->body()->addFile('file', $filePath);
+         
+         if (!file_exists($filePath)) {
+             throw new \InvalidArgumentException("File not found: " . $filePath);
+         }
+         $content = file_get_contents($filePath);
+         if ($content === false) {
+             throw new \RuntimeException("Failed to read file content: " . $filePath);
+         }
+         $request->body()->add('file', new MultipartValue('file', $content, basename($filePath)));
+         
          if ($caption) $request->body()->add('caption', $caption);
          
          return $this->connector()->send($request);
@@ -66,7 +83,14 @@ trait HasSend
          if ($videoUrl) {
              $request->body()->add('video_url', $videoUrl);
          } else {
-             $request->body()->addFile('video', $videoPath);
+             if (!file_exists($videoPath)) {
+                 throw new \InvalidArgumentException("File not found: " . $videoPath);
+             }
+             $content = file_get_contents($videoPath);
+             if ($content === false) {
+                 throw new \RuntimeException("Failed to read file content: " . $videoPath);
+             }
+             $request->body()->add('video', new MultipartValue('video', $content, basename($videoPath)));
          }
          if ($caption) $request->body()->add('caption', $caption);
          if ($viewOnce) $request->body()->add('view_once', $viewOnce ? 'true' : 'false');
@@ -81,7 +105,14 @@ trait HasSend
          if ($audioUrl) {
              $request->body()->add('audio_url', $audioUrl);
          } else {
-             $request->body()->addFile('audio', $audioPath);
+             if (!file_exists($audioPath)) {
+                 throw new \InvalidArgumentException("File not found: " . $audioPath);
+             }
+             $content = file_get_contents($audioPath);
+             if ($content === false) {
+                 throw new \RuntimeException("Failed to read file content: " . $audioPath);
+             }
+             $request->body()->add('audio', new MultipartValue('audio', $content, basename($audioPath)));
          }
          
          return $this->connector()->send($request);
