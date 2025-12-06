@@ -38,20 +38,17 @@ trait HasGoWhatsAppLog
         }
 
         try {
-            $jsonPayload = is_string($payload)
-                ? $payload
-                : json_encode($payload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-
+            // We pass the payload directly. 
+            // The GoWhatsAppLog model has cast 'payload' => 'array', so Eloquent handles JSON serialization.
             GoWhatsAppLog::create([
-                'payload' => $jsonPayload,
+                'payload' => $payload,
                 'status' => $status,
             ]);
-        } catch (JsonException $e) {
-            Log::error('Failed to encode payload for GoWhatsAppLog', [
+        } catch (\Exception $e) {
+            Log::error('Failed to create GoWhatsAppLog', [
                 'payload' => $payload,
                 'exception' => $e->getMessage(),
             ]);
         }
     }
 }
-

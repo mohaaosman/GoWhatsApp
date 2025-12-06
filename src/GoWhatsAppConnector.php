@@ -4,6 +4,7 @@ namespace Zifala\GoWhatsApp;
 
 use Saloon\Http\Connector;
 use Saloon\Traits\Plugins\AcceptsJson;
+use Zifala\GoWhatsApp\Middleware\LogRequestMiddleware;
 use Zifala\GoWhatsApp\Resource\App;
 use Zifala\GoWhatsApp\Resource\Chat;
 use Zifala\GoWhatsApp\Resource\Group;
@@ -11,6 +12,7 @@ use Zifala\GoWhatsApp\Resource\Message;
 use Zifala\GoWhatsApp\Resource\Newsletter;
 use Zifala\GoWhatsApp\Resource\Send;
 use Zifala\GoWhatsApp\Resource\User;
+use Saloon\Http\Auth\BasicAuthenticator;
 
 class GoWhatsAppConnector extends Connector
 {
@@ -18,10 +20,15 @@ class GoWhatsAppConnector extends Connector
 
     public function __construct(
         protected ?string $baseUrl = null,
-        protected ?string $apiKey = null
+        protected ?string $username = null,
+        protected ?string $password = null
     ) {
         $this->baseUrl = $baseUrl ?? config('go-whatsapp.base_url');
-        $this->apiKey = $apiKey ?? config('go-whatsapp.api_key');
+        $this->username = $username ?? config('go-whatsapp.username');
+        $this->password = $password ?? config('go-whatsapp.password');
+
+        // Register Logging Middleware
+        $this->middleware()->onResponse(new LogRequestMiddleware());
     }
 
     /**
@@ -37,15 +44,17 @@ class GoWhatsAppConnector extends Connector
      */
     protected function defaultHeaders(): array
     {
-        $headers = [
+        return [
             'Content-Type' => 'application/json',
         ];
+    }
 
-        if ($this->apiKey) {
-            $headers['Authorization'] = 'Bearer ' . $this->apiKey;
+    protected function defaultAuth(): ?BasicAuthenticator
+    {
+        if ($this->username && $this->password) {
+            return new BasicAuthenticator($this->username, $this->password);
         }
-
-        return $headers;
+        return null;
     }
 
     public function app(): App
@@ -73,7 +82,7 @@ class GoWhatsAppConnector extends Connector
         return new Newsletter($this);
     }
 
-    public function send(): Send
+    public function sending(): Send
     {
         return new Send($this);
     }

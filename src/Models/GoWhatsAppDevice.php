@@ -18,7 +18,10 @@ class GoWhatsAppDevice extends Model
 
     public function connector(): GoWhatsAppConnector
     {
-        return new GoWhatsAppConnector($this->base_url, $this->api_key);
+        return new GoWhatsAppConnector(
+            baseUrl: $this->base_url,
+            username: $this->username,
+            password: $this->password
+        );
     }
 }
-

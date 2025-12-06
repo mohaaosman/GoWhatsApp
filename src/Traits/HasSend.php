@@ -25,7 +25,7 @@ trait HasSend
         if ($replyMessageId) {
             $body['reply_message_id'] = $replyMessageId;
         }
-        $request->withBody(new JsonBodyRepository($body));
+        $request->body()->set($body);
 
         return $this->connector()->send($request);
     }
@@ -34,77 +34,56 @@ trait HasSend
     {
         $request = new SendImage();
         
-        // Check if SendImage uses HasJsonBody (from generated code check).
-        // The generated SendImage.php uses HasJsonBody.
-        // However, the OpenAPI spec says multipart/form-data.
-        // If the generated code forces HasJsonBody, we might have issues if we try to use Multipart.
-        // But Saloon allows overriding the body repository.
-        
-        // If the server expects Multipart, we should use MultipartBodyRepository.
-        
-        $multipart = new MultipartBodyRepository();
-        $multipart->add('phone', $phone);
+        $request->body()->add('phone', $phone);
         
         if ($imageUrl) {
-            $multipart->add('image_url', $imageUrl);
+            $request->body()->add('image_url', $imageUrl);
         } else {
-             // Assuming $imagePath is a file path
-             $multipart->addFile('image', $imagePath);
+             $request->body()->addFile('image', $imagePath);
         }
         
-        if ($caption) $multipart->add('caption', $caption);
-        if ($viewOnce) $multipart->add('view_once', $viewOnce ? 'true' : 'false');
-        if ($compress) $multipart->add('compress', $compress ? 'true' : 'false');
-
-        $request->withBody($multipart);
+        if ($caption) $request->body()->add('caption', $caption);
+        if ($viewOnce) $request->body()->add('view_once', $viewOnce ? 'true' : 'false');
+        if ($compress) $request->body()->add('compress', $compress ? 'true' : 'false');
 
         return $this->connector()->send($request);
     }
     
-    // Similarly for other media types if they are multipart in spec.
-    // Assuming SendFile, SendVideo, SendAudio are multipart.
-    
     public function sendFile(string $phone, string $filePath, ?string $caption = null)
     {
          $request = new SendFile();
-         $multipart = new MultipartBodyRepository();
-         $multipart->add('phone', $phone);
-         $multipart->addFile('file', $filePath);
-         if ($caption) $multipart->add('caption', $caption);
+         $request->body()->add('phone', $phone);
+         $request->body()->addFile('file', $filePath);
+         if ($caption) $request->body()->add('caption', $caption);
          
-         $request->withBody($multipart);
          return $this->connector()->send($request);
     }
 
     public function sendVideo(string $phone, string $videoPath, ?string $caption = null, bool $viewOnce = false, ?string $videoUrl = null)
     {
          $request = new SendVideo();
-         $multipart = new MultipartBodyRepository();
-         $multipart->add('phone', $phone);
+         $request->body()->add('phone', $phone);
          if ($videoUrl) {
-             $multipart->add('video_url', $videoUrl);
+             $request->body()->add('video_url', $videoUrl);
          } else {
-             $multipart->addFile('video', $videoPath);
+             $request->body()->addFile('video', $videoPath);
          }
-         if ($caption) $multipart->add('caption', $caption);
-         if ($viewOnce) $multipart->add('view_once', $viewOnce ? 'true' : 'false');
+         if ($caption) $request->body()->add('caption', $caption);
+         if ($viewOnce) $request->body()->add('view_once', $viewOnce ? 'true' : 'false');
          
-         $request->withBody($multipart);
          return $this->connector()->send($request);
     }
 
     public function sendAudio(string $phone, string $audioPath, ?string $audioUrl = null)
     {
          $request = new SendAudio();
-         $multipart = new MultipartBodyRepository();
-         $multipart->add('phone', $phone);
+         $request->body()->add('phone', $phone);
          if ($audioUrl) {
-             $multipart->add('audio_url', $audioUrl);
+             $request->body()->add('audio_url', $audioUrl);
          } else {
-             $multipart->addFile('audio', $audioPath);
+             $request->body()->addFile('audio', $audioPath);
          }
          
-         $request->withBody($multipart);
          return $this->connector()->send($request);
     }
 
@@ -115,7 +94,7 @@ trait HasSend
             'type' => $type,
             'is_forwarded' => $isForwarded,
         ];
-        $request->withBody(new JsonBodyRepository($body));
+        $request->body()->set($body);
         return $this->connector()->send($request);
     }
 
@@ -126,7 +105,7 @@ trait HasSend
             'phone' => $phone,
             'action' => $action,
         ];
-        $request->withBody(new JsonBodyRepository($body));
+        $request->body()->set($body);
         return $this->connector()->send($request);
     }
 }

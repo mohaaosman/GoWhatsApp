@@ -12,21 +12,14 @@ trait HasAccount
 {
     public function avatar(string $phone, bool $isPreview = false, bool $isCommunity = false)
     {
-        // Confirmed via read_file that UserAvatar accepts constructor args
         $request = new UserAvatar($phone, $isPreview, $isCommunity);
         return $this->connector()->send($request);
     }
 
-    public function changeAvatar(string $avatar)
+    public function changeAvatar(string $avatarPath)
     {
         $request = new UserChangeAvatar();
-        $multipart = new MultipartBodyRepository();
-        // Assuming avatar is a file path or binary content. 
-        // OpenAPI spec says "Avatar to send" with format binary.
-        // Usually means file upload.
-        $multipart->addFile('avatar', $avatar);
-        $request->withBody($multipart);
-        
+        $request->body()->addFile('avatar', $avatarPath);
         return $this->connector()->send($request);
     }
 

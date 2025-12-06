@@ -6,14 +6,14 @@ use DateTime;
 use Saloon\Contracts\Body\HasBody;
 use Saloon\Enums\Method;
 use Saloon\Http\Request;
-use Saloon\Traits\Body\HasJsonBody;
+use Saloon\Traits\Body\HasMultipartBody;
 
 /**
  * sendFile
  */
 class SendFile extends Request implements HasBody
 {
-	use HasJsonBody;
+	use HasMultipartBody;
 
 	protected Method $method = Method::POST;
 

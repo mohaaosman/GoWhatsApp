@@ -29,7 +29,8 @@ Set your global defaults in `.env` (optional, used if no device-specific config 
 
 ```env
 GO_WHATSAPP_BASE_URL=http://localhost:3000
-GO_WHATSAPP_API_KEY=your-api-key-if-any
+GO_WHATSAPP_USERNAME=your-username
+GO_WHATSAPP_PASSWORD=your-password
 GO_WHATSAPP_LOGGING_ENABLED=true
 ```
 
@@ -45,7 +46,8 @@ use Zifala\GoWhatsApp\Models\GoWhatsAppDevice;
 $device = GoWhatsAppDevice::create([
     'name' => 'My Main Device',
     'base_url' => 'http://localhost:3000',
-    'api_key' => 'secret-key', // Optional
+    'username' => 'myuser',
+    'password' => 'mypassword',
     'phone' => '628123456789', // Optional, for reference
 ]);
 ```
@@ -139,10 +141,10 @@ If you need to access the underlying Saloon connector directly:
 ```php
 use Zifala\GoWhatsApp\GoWhatsAppConnector;
 
-$connector = new GoWhatsAppConnector('http://localhost:3000', 'api-key');
+$connector = new GoWhatsAppConnector('http://localhost:3000', 'username', 'password');
 
 // Use generated resources directly
-$response = $connector->send()->sendMessage();
+$response = $connector->sending()->sendMessage();
 ```
 
 ## License
