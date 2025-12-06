@@ -45,18 +45,31 @@ use Zifala\GoWhatsApp\Models\GoWhatsAppDevice;
 
 $device = GoWhatsAppDevice::create([
     'name' => 'My Main Device',
-    'base_url' => 'http://localhost:3000',
-    'username' => 'myuser',
-    'password' => 'mypassword',
-    'phone' => '628123456789', // Optional, for reference
+    'base_url' => 'http://localhost:3000', // Optional if using env default
+    'username' => 'myuser',                // Optional if using env default
+    'password' => 'mypassword',            // Optional if using env default
+    'phone' => '628123456789',             // Optional, for reference
 ]);
 ```
+
+#### Sync Devices
+You can synchronize your database with the GoWhatsApp server to automatically import active sessions and remove stale ones. This allows you to fetch all devices currently active on the server.
+
+```php
+// Syncs active devices from server to DB and removes stale local records
+GoWhatsAppDevice::sync();
+```
+
+*Note: Stale devices (those in the DB but not on the server) are deleted via a background job `DeleteStaleDevices`.*
 
 ### App Management
 
 Manage the session and connection state.
 
 ```php
+// List all active sessions/devices on the server
+$devices = $device->devices();
+
 // Login with code
 $device->loginWithCode('628123456789');
 
