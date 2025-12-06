@@ -23,5 +23,9 @@ trait HasApp
     {
         return $this->connector()->app()->appLoginWithCode($phone);
     }
-}
 
+    public function devices()
+    {
+        return $this->connector()->app()->appDevices();
+    }
+}
