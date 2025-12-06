@@ -36,6 +36,10 @@ trait HasAccount
         return $this->connector()->send($request);
     }
 
+    /**
+     * Check if user exists.
+     * Returns the raw Saloon Response for detailed inspection.
+     */
     public function checkUser(string $phone)
     {
         $phone = $this->formatPhone($phone);
@@ -61,7 +65,14 @@ trait HasAccount
             return false;
         }
 
-        // $data = $response->json();
+        $data = $response->json();
+        
+        // Parse the nested "results.is_on_whatsapp" structure
+        if (isset($data['results']['is_on_whatsapp'])) {
+            return (bool) $data['results']['is_on_whatsapp'];
+        }
+
+        // Fallback for different API versions or unexpected structures
         return $response->status() === 200;
     }
 }

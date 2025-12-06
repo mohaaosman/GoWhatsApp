@@ -42,11 +42,12 @@ test('send message validates state', function () {
     
     try {
         // Sending to a valid number should pass validation and send
-        $response = $device->sendMessage('252614392674', 'Hello Simple!');
+        $result = $device->sendMessage('252614392674', 'Hello Simple!');
         
-        // We expect 200 or 201
-        expect($response->status())->toBeIn([200, 201]);
+        // We expect true due to handleResponse
+        expect($result)->toBeTrue();
     } catch (\Exception $e) {
+        // If message fails (e.g. number not found or 500 error), we want to see it
         $this->fail('Message send failed: ' . $e->getMessage());
     }
 });

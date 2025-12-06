@@ -108,6 +108,8 @@ $device->reconnect();
 
 Send various types of messages easily.
 
+> **Note**: Methods return `true` on success and throw a `RuntimeException` on failure (e.g., WhatsApp error, number not found).
+
 ```php
 // Send Text
 $device->sendMessage('628123456789', 'Hello from Laravel!');
@@ -117,6 +119,8 @@ $device->sendMessage('628123456789', 'Replying to you', 'message-id-to-reply');
 
 // Send Image
 $device->sendImage('628123456789', '/path/to/image.jpg', 'Cool Image');
+// Or via URL
+$device->sendImage('628123456789', 'https://example.com/image.jpg', 'Image from URL');
 
 // Send File
 $device->sendFile('628123456789', '/path/to/document.pdf', 'Here is the doc');
@@ -134,6 +138,24 @@ $device->sendPresence('available'); // or 'unavailable'
 $device->sendChatPresence('628123456789', 'start'); // 'start' or 'stop'
 ```
 
+### Group Management
+
+Create and manage groups.
+
+```php
+// Create Group
+$device->createGroup('My Group Name', ['628123456789', '628987654321']);
+
+// Join Group via Link
+$device->joinGroup('https://chat.whatsapp.com/InviteLink...');
+
+// Leave Group
+$device->leaveGroup('123456789-123456@g.us');
+
+// Get Group Info
+$info = $device->groupInfo('123456789-123456@g.us');
+```
+
 ### Account Management
 
 Manage user account information.
@@ -146,7 +168,8 @@ $info = $device->userInfo('628123456789');
 $response = $device->checkUser('628123456789');
 
 // Check if Number Exists (Boolean Helper)
-$exists = $device->numberExists('628123456789'); // Returns true/false
+// Returns true if registered on WhatsApp, false otherwise.
+$exists = $device->numberExists('628123456789'); 
 
 // Get Avatar
 $avatar = $device->avatar('628123456789');

@@ -13,22 +13,6 @@ use Saloon\Data\MultipartValue;
 
 trait HasSend
 {
-    // Use formatPhone from separate trait if needed, 
-    // or assume the main class uses it.
-    // However, traits can't easily share protected methods unless composed.
-    // Best practice: The Model uses FormatPhone, and traits just call $this->formatPhone().
-    // But traits don't know about each other.
-    // Solution: Require the method to exist (abstract) or use a helper trait included in the Model.
-    
-    // Abstract requirement
-    // abstract protected function formatPhone(string $phone): string;
-    
-    // Better: We assume the class using this trait also uses FormatPhone trait.
-    // PHP doesn't enforce this check at compile time for method existence on $this 
-    // inside a trait unless we define abstract.
-    
-    // To solve collision: remove formatPhone definition from here.
-    
     /**
      * Validate prerequisites before sending.
      * Checks if device is connected and optionally if the number exists.
@@ -46,6 +30,31 @@ trait HasSend
         }
     }
 
+    protected function handleResponse($response, string $successKey = 'message_id')
+    {
+        if ($response->successful()) {
+            $data = $response->json();
+            
+            // Check for explicit "code": "SUCCESS" if present
+            if (isset($data['code']) && $data['code'] === 'SUCCESS') {
+                return true;
+            }
+            
+            // Or check for results
+             if (isset($data['results'])) {
+                return true;
+            }
+
+            return true;
+        }
+
+        // Handle error responses
+        $data = $response->json();
+        $message = $data['message'] ?? $response->body();
+        
+        throw new \RuntimeException("WhatsApp Error: " . $message);
+    }
+
     public function sendMessage(string $phone, string $message, ?string $replyTo = null)
     {
         $phone = $this->formatPhone($phone);
@@ -61,7 +70,8 @@ trait HasSend
         }
         $request->body()->set($body);
 
-        return $this->connector()->send($request);
+        $response = $this->connector()->send($request);
+        return $this->handleResponse($response);
     }
 
     public function sendImage(string $phone, string $image, ?string $caption = null)
@@ -89,7 +99,8 @@ trait HasSend
         $request->body()->add('view_once', 'false');
         $request->body()->add('compress', 'false');
 
-        return $this->connector()->send($request);
+        $response = $this->connector()->send($request);
+        return $this->handleResponse($response);
     }
 
     public function sendFile(string $phone, string $file, ?string $caption = null)
@@ -111,7 +122,8 @@ trait HasSend
 
         if ($caption) $request->body()->add('caption', $caption);
 
-        return $this->connector()->send($request);
+        $response = $this->connector()->send($request);
+        return $this->handleResponse($response);
     }
 
     public function sendVideo(string $phone, string $video, ?string $caption = null)
@@ -138,7 +150,8 @@ trait HasSend
         if ($caption) $request->body()->add('caption', $caption);
         $request->body()->add('view_once', 'false');
 
-        return $this->connector()->send($request);
+        $response = $this->connector()->send($request);
+        return $this->handleResponse($response);
     }
 
     public function sendAudio(string $phone, string $audio)
@@ -162,7 +175,8 @@ trait HasSend
              $request->body()->add('audio', new MultipartValue('audio', $content, basename($audio)));
         }
 
-        return $this->connector()->send($request);
+        $response = $this->connector()->send($request);
+        return $this->handleResponse($response);
     }
 
     public function sendPresence(string $type, bool $isForwarded = false)
@@ -173,7 +187,9 @@ trait HasSend
             'is_forwarded' => $isForwarded,
         ];
         $request->body()->set($body);
-        return $this->connector()->send($request);
+        
+        $response = $this->connector()->send($request);
+        return $this->handleResponse($response);
     }
 
     public function sendChatPresence(string $phone, string $action)
@@ -187,6 +203,8 @@ trait HasSend
             'action' => $action,
         ];
         $request->body()->set($body);
-        return $this->connector()->send($request);
+        
+        $response = $this->connector()->send($request);
+        return $this->handleResponse($response);
     }
 }
