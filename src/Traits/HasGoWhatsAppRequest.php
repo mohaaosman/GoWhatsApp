@@ -6,7 +6,7 @@ use Exception;
 use ReflectionClass;
 use RuntimeException;
 use Zifala\GoWhatsApp\GoWhatsAppConnector;
-use Zifala\GoWhatsApp\Requests\Message\SendTextRequest;
+use Zifala\GoWhatsApp\Requests\Send\SendMessage;
 use Saloon\Exceptions\Request\FatalRequestException;
 use Saloon\Exceptions\Request\RequestException;
 
@@ -21,14 +21,23 @@ trait HasGoWhatsAppRequest
     {
         try {
             $connector = new GoWhatsAppConnector();
-            $request = new SendTextRequest($phone, $message, $replyTo);
+            $request = new SendMessage();
+            
+            $payload = [
+                'phone' => $phone,
+                'message' => $message,
+            ];
+
+             if ($replyTo) {
+                $payload['reply_message_id'] = $replyTo;
+            }
+
+            $request->body()->set($payload);
             
             $response = $connector->send($request);
 
             if ($response->successful()) {
-                $data = $response->json('data'); // Assuming API returns 'data' key based on standard practices, verify against actual API response if needed. 
-                // Based on openapi.yaml, the success response for /chat/send/text usually returns a JSON with message details.
-                // Adjusting to capture relevant response data.
+                $data = $response->json('results');
                 
                 $this->successLog([
                     'phone' => $phone,
@@ -53,4 +62,3 @@ trait HasGoWhatsAppRequest
         return false;
     }
 }
-

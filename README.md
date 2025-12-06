@@ -4,63 +4,147 @@ A Laravel wrapper for [go-whatsapp-web-multidevice](https://github.com/aldinokem
 
 ## Installation
 
+You can install the package via composer:
+
 ```bash
 composer require zifala/go-whatsapp-laravel
 ```
 
 ## Configuration
 
-Publish the configuration file:
+Publish the configuration file and migrations:
 
 ```bash
-php artisan vendor:publish --tag=go-whatsapp-config
+php artisan vendor:publish --tag="go-whatsapp-config"
+php artisan vendor:publish --tag="go-whatsapp-migrations"
 ```
 
-Set your environment variables in `.env`:
+Run migrations to create the `go_whatsapp_devices` and `go_whatsapp_logs` tables:
+
+```bash
+php artisan migrate
+```
+
+Set your global defaults in `.env` (optional, used if no device-specific config is provided):
 
 ```env
 GO_WHATSAPP_BASE_URL=http://localhost:3000
 GO_WHATSAPP_API_KEY=your-api-key-if-any
+GO_WHATSAPP_LOGGING_ENABLED=true
 ```
 
 ## Usage
 
-### Connector
+### Managing Devices
+
+The package uses the `GoWhatsAppDevice` model to manage connections. You can create a device record in your database:
 
 ```php
-use Zifala\GoWhatsApp\GoWhatsAppConnector;
+use Zifala\GoWhatsApp\Models\GoWhatsAppDevice;
 
-$connector = new GoWhatsAppConnector();
+$device = GoWhatsAppDevice::create([
+    'name' => 'My Main Device',
+    'base_url' => 'http://localhost:3000',
+    'api_key' => 'secret-key', // Optional
+    'phone' => '628123456789', // Optional, for reference
+]);
 ```
 
-### Authentication
+### App Management
 
-#### Login with Code
-
-```php
-use Zifala\GoWhatsApp\Requests\Auth\LoginWithCodeRequest;
-
-$request = new LoginWithCodeRequest('628123456789');
-$response = $connector->send($request);
-```
-
-#### Get QR Code
+Manage the session and connection state.
 
 ```php
-use Zifala\GoWhatsApp\Requests\Auth\GetQrCodeRequest;
+// Login with code
+$device->loginWithCode('628123456789');
 
-$request = new GetQrCodeRequest();
-$response = $connector->send($request);
+// Login (QR Code flow usually initiated here if supported by API logic)
+$device->login();
+
+// Logout
+$device->logout();
+
+// Reconnect
+$device->reconnect();
 ```
 
 ### Sending Messages
 
-#### Send Text
+Send various types of messages easily.
 
 ```php
-use Zifala\GoWhatsApp\Requests\Message\SendTextRequest;
+// Send Text
+$device->sendMessage('628123456789', 'Hello from Laravel!');
 
-$request = new SendTextRequest('628123456789', 'Hello from Laravel!');
-$response = $connector->send($request);
+// Send Text with Reply
+$device->sendMessage('628123456789', 'Replying to you', 'message-id-to-reply');
+
+// Send Image
+$device->sendImage('628123456789', '/path/to/image.jpg', 'Cool Image');
+
+// Send File
+$device->sendFile('628123456789', '/path/to/document.pdf', 'Here is the doc');
+
+// Send Video
+$device->sendVideo('628123456789', '/path/to/video.mp4', 'Check this out');
+
+// Send Audio
+$device->sendAudio('628123456789', '/path/to/audio.mp3');
+
+// Send Presence
+$device->sendPresence('available'); // or 'unavailable'
+
+// Send Chat Presence (Typing)
+$device->sendChatPresence('628123456789', 'start'); // 'start' or 'stop'
 ```
 
+### Account Management
+
+Manage user account information.
+
+```php
+// Get User Info
+$info = $device->userInfo('628123456789');
+
+// Check if User exists on WhatsApp
+$exists = $device->checkUser('628123456789');
+
+// Get Avatar
+$avatar = $device->avatar('628123456789');
+
+// Change Avatar
+$device->changeAvatar('/path/to/new/avatar.jpg');
+```
+
+### Chat Management
+
+Interact with chats and messages.
+
+```php
+// Get Chat List
+$chats = $device->chatList(limit: 10, search: 'John');
+
+// Get Messages from a Chat
+$messages = $device->chatMessages('628123456789@s.whatsapp.net', limit: 20);
+```
+
+### Logging
+
+If logging is enabled in the config, all requests and statuses are logged to the `go_whatsapp_logs` table.
+
+### Direct Connector Usage
+
+If you need to access the underlying Saloon connector directly:
+
+```php
+use Zifala\GoWhatsApp\GoWhatsAppConnector;
+
+$connector = new GoWhatsAppConnector('http://localhost:3000', 'api-key');
+
+// Use generated resources directly
+$response = $connector->send()->sendMessage();
+```
+
+## License
+
+The MIT License (MIT). Please see [License File](LICENSE.md) for more information.

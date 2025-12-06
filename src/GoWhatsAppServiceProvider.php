@@ -17,6 +17,7 @@ class GoWhatsAppServiceProvider extends PackageServiceProvider
         $package
             ->name('go-whatsapp')
             ->hasConfigFile()
-            ->hasMigration('create_go_whatsapp_logs_table');
+            ->hasMigration('create_go_whatsapp_logs_table')
+            ->hasMigration('create_go_whatsapp_devices_table');
     }
 }
