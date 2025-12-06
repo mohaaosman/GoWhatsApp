@@ -13,6 +13,8 @@ use Saloon\Data\MultipartValue;
 
 trait HasSend
 {
+    use FormatPhone;
+
     /**
      * Validate prerequisites before sending.
      * Checks if device is connected and optionally if the number exists.

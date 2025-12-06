@@ -8,12 +8,18 @@ use Zifala\GoWhatsApp\Traits\HasSend;
 use Zifala\GoWhatsApp\Traits\HasAccount;
 use Zifala\GoWhatsApp\Traits\HasChatManagement;
 use Zifala\GoWhatsApp\Traits\HasGroupManagement;
-use Zifala\GoWhatsApp\Traits\FormatPhone;
 use Zifala\GoWhatsApp\GoWhatsAppConnector;
 
 class GoWhatsAppDevice extends Model
 {
-    use HasApp, HasSend, HasAccount, HasChatManagement, HasGroupManagement, FormatPhone;
+    use HasApp;
+    use HasChatManagement;
+    use HasGroupManagement;
+    
+    // Resolve trait collision for formatPhone since both HasSend and HasAccount provide it
+    use HasSend, HasAccount {
+        HasSend::formatPhone insteadof HasAccount;
+    }
 
     protected $guarded = [];
     protected $table = 'go_whatsapp_devices';
