@@ -1,0 +1,33 @@
+{
+    "name": "zifala/go-whatsapp-laravel",
+    "description": "Laravel package for go-whatsapp-web-multidevice using Saloon",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Zifala\\GoWhatsApp\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Mohamed Osman",
+            "email": "mohaaosman12@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "saloonphp/saloon": "^3.0",
+        "saloonphp/laravel-plugin": "^3.0",
+        "spatie/laravel-package-tools": "^1.16"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Zifala\\GoWhatsApp\\GoWhatsAppServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
+
