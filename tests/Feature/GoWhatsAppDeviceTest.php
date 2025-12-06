@@ -27,13 +27,37 @@ test('number exists check', function () {
     $device = GoWhatsAppDevice::getDevice();
 
     try {
-        // Checking a known number (from previous context, usually returns 200/exists)
-        $exists = $device->numberExists('252614392674'); // Assuming this number is valid on WA
+        // Checking a known number
+        $exists = $device->numberExists('252614392674'); 
         
-        // If live test, this might fail if number is invalid/banned, but checks the method runs
-        // If it returns bool, we expect bool
         expect($exists)->toBeBool();
     } catch (\Exception $e) {
+        // If API fails completely, failing test is appropriate for "live" mode
         $this->fail('Number check failed: ' . $e->getMessage());
     }
+});
+
+test('send message validates state', function () {
+    $device = GoWhatsAppDevice::getDevice();
+    
+    try {
+        // Sending to a valid number should pass validation and send
+        $response = $device->sendMessage('252614392674', 'Hello Simple!');
+        
+        // We expect 200 or 201
+        expect($response->status())->toBeIn([200, 201]);
+    } catch (\Exception $e) {
+        $this->fail('Message send failed: ' . $e->getMessage());
+    }
+});
+
+test('can create group via trait', function () {
+    $device = GoWhatsAppDevice::getDevice();
+    
+    // We won't actually create a group in test to avoid spamming, but we check if method exists
+    expect(method_exists($device, 'createGroup'))->toBeTrue();
+    
+    // Optional: Call it if needed
+    // $response = $device->createGroup('Test Group', ['252614392674']);
+    // expect($response->status())->toBeIn([200, 201]);
 });

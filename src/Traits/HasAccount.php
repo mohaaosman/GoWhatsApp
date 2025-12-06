@@ -10,8 +10,12 @@ use Saloon\Data\MultipartValue;
 
 trait HasAccount
 {
+    // Removed formatPhone definition to avoid collision.
+    // Relies on FormatPhone trait being used in the class.
+
     public function avatar(string $phone, bool $isPreview = false, bool $isCommunity = false)
     {
+        $phone = $this->formatPhone($phone);
         $request = new UserAvatar($phone, $isPreview, $isCommunity);
         return $this->connector()->send($request);
     }
@@ -34,12 +38,14 @@ trait HasAccount
 
     public function checkUser(string $phone)
     {
+        $phone = $this->formatPhone($phone);
         $request = new UserCheck($phone);
         return $this->connector()->send($request);
     }
 
     public function userInfo(string $phone)
     {
+        $phone = $this->formatPhone($phone);
         $request = new UserInfo($phone);
         return $this->connector()->send($request);
     }
@@ -55,15 +61,7 @@ trait HasAccount
             return false;
         }
 
-        // Adjust based on actual API response structure for /user/check
-        // Usually returns { "status": 200, "result": true/false } or { "onwhatsapp": "true" }
-        $data = $response->json();
-        
-        // Example check (adjust based on real API)
-        // If API returns { "result": true } or similar
-        return isset($data['result']) && $data['result'] === true; // Placeholder logic
-        // Or if it returns 200 only if exists?
-        // Let's assume successful response implies existence for now or check 'id' presence.
+        // $data = $response->json();
         return $response->status() === 200;
     }
 }
