@@ -61,7 +61,7 @@ Run migrations to create the `go_whatsapp_devices` and `go_whatsapp_logs` tables
 php artisan migrate
 ```
 
-Set your global defaults in `.env` (optional, used if no device-specific config is provided):
+Set your global defaults in `.env`:
 
 ```env
 GO_WHATSAPP_BASE_URL=http://localhost:3000
@@ -72,7 +72,7 @@ GO_WHATSAPP_LOGGING_ENABLED=true
 
 ## Usage
 
-### Getting the Device Instance
+### 1. Using the Device Model (Recommended)
 
 The package simplifies device management by providing a helper to get the single active device instance. It automatically checks for an existing device in the database, fetches from the API, or creates one based on your config.
 
@@ -81,6 +81,33 @@ use Zifala\GoWhatsApp\Models\GoWhatsAppDevice;
 
 // Retrieve the singleton device instance
 $device = GoWhatsAppDevice::getDevice();
+
+// Now you can use all methods
+$device->sendMessage('628123456789', 'Hello World');
+```
+
+### 2. Using Traits in Your Own Classes
+
+You can also use the package's functionality directly in your own classes (e.g., Services, Jobs, Livewire Components) by using the provided traits. The connection will be automatically resolved using your `.env` configuration.
+
+```php
+namespace App\Services;
+
+use Zifala\GoWhatsApp\Traits\HasSend;
+use Zifala\GoWhatsApp\Traits\HasAccount;
+
+class WhatsAppService
+{
+    use HasSend, HasAccount;
+
+    public function sendWelcomeMessage(string $phone)
+    {
+        // Helper methods like numberExists and sendMessage are available directly
+        if ($this->numberExists($phone)) {
+            $this->sendMessage($phone, "Welcome to our platform!");
+        }
+    }
+}
 ```
 
 ### App Management
@@ -120,7 +147,7 @@ $device->sendMessage('628123456789', 'Replying to you', 'message-id-to-reply');
 // Send Image
 $device->sendImage('628123456789', '/path/to/image.jpg', 'Cool Image');
 // Or via URL
-$device->sendImage('628123456789', 'https://example.com/image.jpg', 'Image from URL');
+$device->sendImage('628123456789', 'https://example.com/image.jpg', 'Image from URL', imageUrl: 'https://example.com/image.jpg');
 
 // Send File
 $device->sendFile('628123456789', '/path/to/document.pdf', 'Here is the doc');
@@ -135,7 +162,7 @@ $device->sendAudio('628123456789', '/path/to/audio.mp3');
 $device->sendPresence('available'); // or 'unavailable'
 
 // Send Chat Presence (Typing)
-$device->sendChatPresence('628123456789', 'start'); // 'start' or 'stop'
+$device->sendChatPresence('628123456789', 'composing'); // 'composing', 'paused', 'recording'
 ```
 
 ### Group Management
@@ -147,7 +174,7 @@ Create and manage groups.
 $device->createGroup('My Group Name', ['628123456789', '628987654321']);
 
 // Join Group via Link
-$device->joinGroup('https://chat.whatsapp.com/InviteLink...');
+$device->joinGroupWithLink('https://chat.whatsapp.com/InviteLink...');
 
 // Leave Group
 $device->leaveGroup('123456789-123456@g.us');
@@ -196,12 +223,12 @@ If logging is enabled in the config, all requests and statuses are logged to the
 
 ### Direct Connector Usage
 
-If you need to access the underlying Saloon connector directly:
+If you need to access the underlying Saloon connector directly, you can resolve it from the container:
 
 ```php
 use Zifala\GoWhatsApp\GoWhatsAppConnector;
 
-$connector = new GoWhatsAppConnector('http://localhost:3000', 'username', 'password');
+$connector = app(GoWhatsAppConnector::class);
 
 // Use generated resources directly
 $response = $connector->sending()->sendMessage();
