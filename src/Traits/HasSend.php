@@ -10,6 +10,13 @@ use Zifala\GoWhatsApp\Requests\Send\SendAudio;
 use Zifala\GoWhatsApp\Requests\Send\SendPresence;
 use Zifala\GoWhatsApp\Requests\Send\SendChatPresence;
 use Saloon\Data\MultipartValue;
+use Zifala\GoWhatsApp\Jobs\ProcessSendMessage;
+use Zifala\GoWhatsApp\Jobs\ProcessSendImage;
+use Zifala\GoWhatsApp\Jobs\ProcessSendFile;
+use Zifala\GoWhatsApp\Jobs\ProcessSendVideo;
+use Zifala\GoWhatsApp\Jobs\ProcessSendAudio;
+use Zifala\GoWhatsApp\Jobs\ProcessSendPresence;
+use Zifala\GoWhatsApp\Jobs\ProcessSendChatPresence;
 
 trait HasSend
 {
@@ -58,8 +65,13 @@ trait HasSend
         throw new \RuntimeException("WhatsApp Error: " . $message);
     }
 
-    public function sendMessage(string $phone, string $message, ?string $replyTo = null)
+    public function sendMessage(string $phone, string $message, ?string $replyTo = null, bool $forceSync = false)
     {
+        if (!$forceSync && config('go-whatsapp.queue_enabled', false)) {
+            ProcessSendMessage::dispatch($phone, $message, $replyTo);
+            return true;
+        }
+
         $phone = $this->formatPhone($phone);
         $this->validatePreSending($phone);
 
@@ -77,8 +89,13 @@ trait HasSend
         return $this->handleResponse($response);
     }
 
-    public function sendImage(string $phone, string $image, ?string $caption = null)
+    public function sendImage(string $phone, string $image, ?string $caption = null, bool $forceSync = false)
     {
+        if (!$forceSync && config('go-whatsapp.queue_enabled', false)) {
+            ProcessSendImage::dispatch($phone, $image, $caption);
+            return true;
+        }
+
         $phone = $this->formatPhone($phone);
         $this->validatePreSending($phone);
 
@@ -106,8 +123,13 @@ trait HasSend
         return $this->handleResponse($response);
     }
 
-    public function sendFile(string $phone, string $file, ?string $caption = null)
+    public function sendFile(string $phone, string $file, ?string $caption = null, bool $forceSync = false)
     {
+        if (!$forceSync && config('go-whatsapp.queue_enabled', false)) {
+            ProcessSendFile::dispatch($phone, $file, $caption);
+            return true;
+        }
+
         $phone = $this->formatPhone($phone);
         $this->validatePreSending($phone);
 
@@ -129,8 +151,13 @@ trait HasSend
         return $this->handleResponse($response);
     }
 
-    public function sendVideo(string $phone, string $video, ?string $caption = null)
+    public function sendVideo(string $phone, string $video, ?string $caption = null, bool $forceSync = false)
     {
+        if (!$forceSync && config('go-whatsapp.queue_enabled', false)) {
+            ProcessSendVideo::dispatch($phone, $video, $caption);
+            return true;
+        }
+
         $phone = $this->formatPhone($phone);
         $this->validatePreSending($phone);
 
@@ -157,8 +184,13 @@ trait HasSend
         return $this->handleResponse($response);
     }
 
-    public function sendAudio(string $phone, string $audio)
+    public function sendAudio(string $phone, string $audio, bool $forceSync = false)
     {
+        if (!$forceSync && config('go-whatsapp.queue_enabled', false)) {
+            ProcessSendAudio::dispatch($phone, $audio);
+            return true;
+        }
+
         $phone = $this->formatPhone($phone);
         $this->validatePreSending($phone);
 
@@ -182,8 +214,13 @@ trait HasSend
         return $this->handleResponse($response);
     }
 
-    public function sendPresence(string $type, bool $isForwarded = false)
+    public function sendPresence(string $type, bool $isForwarded = false, bool $forceSync = false)
     {
+        if (!$forceSync && config('go-whatsapp.queue_enabled', false)) {
+            ProcessSendPresence::dispatch($type, $isForwarded);
+            return true;
+        }
+
         $request = new SendPresence();
         $body = [
             'type' => $type,
@@ -195,8 +232,13 @@ trait HasSend
         return $this->handleResponse($response);
     }
 
-    public function sendChatPresence(string $phone, string $action)
+    public function sendChatPresence(string $phone, string $action, bool $forceSync = false)
     {
+        if (!$forceSync && config('go-whatsapp.queue_enabled', false)) {
+            ProcessSendChatPresence::dispatch($phone, $action);
+            return true;
+        }
+
         $phone = $this->formatPhone($phone);
         $this->validatePreSending($phone);
 

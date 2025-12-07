@@ -68,6 +68,9 @@ GO_WHATSAPP_BASE_URL=http://localhost:3000
 GO_WHATSAPP_USERNAME=your-username
 GO_WHATSAPP_PASSWORD=your-password
 GO_WHATSAPP_LOGGING_ENABLED=true
+GO_WHATSAPP_QUEUE_ENABLED=false
+GO_WHATSAPP_QUEUE_CONNECTION=sync
+GO_WHATSAPP_QUEUE_NAME=default
 ```
 
 ## Usage
@@ -220,6 +223,23 @@ $messages = $device->chatMessages('628123456789@s.whatsapp.net', limit: 20);
 ### Logging
 
 If logging is enabled in the config, all requests and statuses are logged to the `go_whatsapp_logs` table.
+
+### Queueing
+
+To improve performance, you can choose to send messages in the background using Laravel Queues.
+
+1.  Enable queuing in your `.env` or config:
+    ```env
+    GO_WHATSAPP_QUEUE_ENABLED=true
+    ```
+
+2.  (Optional) Configure the queue connection and name:
+    ```env
+    GO_WHATSAPP_QUEUE_CONNECTION=redis
+    GO_WHATSAPP_QUEUE_NAME=whatsapp_messages
+    ```
+
+When enabled, all `send*` methods (e.g., `sendMessage`, `sendImage`) will dispatch a job and return `true` immediately. The actual API call happens in the background worker.
 
 ### Direct Connector Usage
 
