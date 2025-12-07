@@ -4,6 +4,8 @@ namespace Zifala\GoWhatsApp\Traits;
 
 trait HasApp
 {
+    use HasConnector;
+
     public function login()
     {
         return $this->connector()->app()->appLogin();

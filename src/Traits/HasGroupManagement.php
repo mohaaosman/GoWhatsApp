@@ -10,6 +10,8 @@ use Saloon\Data\MultipartValue;
 
 trait HasGroupManagement
 {
+    use HasConnector;
+
     public function createGroup(string $name, array $participants)
     {
         $request = new CreateGroup();
@@ -39,4 +41,3 @@ trait HasGroupManagement
         return $this->connector()->group()->groupInfo($groupId);
     }
 }
-

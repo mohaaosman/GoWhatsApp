@@ -10,8 +10,8 @@ use Saloon\Data\MultipartValue;
 
 trait HasAccount
 {
-    // Include the FormatPhone trait here so $this->formatPhone() is always available
     use FormatPhone;
+    use HasConnector;
 
     public function avatar(string $phone, bool $isPreview = false, bool $isCommunity = false)
     {

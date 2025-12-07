@@ -16,14 +16,17 @@ class GoWhatsAppDevice extends Model
     use HasChatManagement;
     use HasGroupManagement;
     
-    // Resolve trait collision for formatPhone since both HasSend and HasAccount provide it
+    // Resolve trait collision for formatPhone and connector
     use HasSend, HasAccount {
         HasSend::formatPhone insteadof HasAccount;
+        HasSend::connector insteadof HasAccount, HasApp, HasChatManagement, HasGroupManagement;
     }
 
     protected $guarded = [];
     protected $table = 'go_whatsapp_devices';
 
+    // Override the trait's connector resolver to use this instance's config
+    // This maintains backward compatibility for the singleton pattern which stores credentials in DB/Model properties
     public function connector(): GoWhatsAppConnector
     {
         return new GoWhatsAppConnector(

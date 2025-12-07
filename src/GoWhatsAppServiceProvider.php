@@ -20,4 +20,16 @@ class GoWhatsAppServiceProvider extends PackageServiceProvider
             ->hasMigration('create_go_whatsapp_logs_table')
             ->hasMigration('create_go_whatsapp_devices_table');
     }
+
+    public function packageRegistered()
+    {
+        // Bind the Connector Singleton using config
+        $this->app->singleton(GoWhatsAppConnector::class, function () {
+            return new GoWhatsAppConnector(
+                baseUrl: config('go-whatsapp.base_url'),
+                username: config('go-whatsapp.username'),
+                password: config('go-whatsapp.password')
+            );
+        });
+    }
 }

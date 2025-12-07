@@ -14,6 +14,7 @@ use Saloon\Data\MultipartValue;
 trait HasSend
 {
     use FormatPhone;
+    use HasConnector;
 
     /**
      * Validate prerequisites before sending.
